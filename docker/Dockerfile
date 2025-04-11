@@ -1,15 +1,23 @@
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Set PATH early so that uv is found in later commands.
+# Set PATH and LD_PRELOAD so that uv and the preloading are set system-wide.
 ENV PATH="/root/.local/bin:${PATH}"
+ENV LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6"
 
-# Install system tools, Python 3.11, pip, etc. in one RUN.
+# Install system tools, enable Universe repository, and install X11/GL dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       software-properties-common \
       curl \
       git && \
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+      libx11-6 \
+      libgl1-mesa-glx \
+      libglx-mesa0 && \
+    # Now add the deadsnakes PPA for Python 3.11
     add-apt-repository ppa:deadsnakes/ppa -y && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -22,10 +30,11 @@ RUN apt-get update && \
     python -m pip install --upgrade pip
 
 WORKDIR /open_duck
-# Copy your entire project. (Make sure you have a proper .dockerignore to exclude unneeded files.)
+# Copy the entire repository; use a proper .dockerignore to exclude unneeded files.
 COPY . .
 
 # Combine uv installation and virtual environment sync in one RUN.
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && uv sync --frozen
 
 CMD ["bash"]
+
