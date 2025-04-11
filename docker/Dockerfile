@@ -33,8 +33,9 @@ WORKDIR /open_duck
 # Copy the entire repository; use a proper .dockerignore to exclude unneeded files.
 COPY . .
 
-# Combine uv installation and virtual environment sync in one RUN.
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && uv sync --frozen
+# Install uv, then ensure the uv lockfile exists (create if not) and sync the environment.
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    if [ ! -f uv.lock ]; then uv lock; fi && \
+    uv sync --frozen
 
 CMD ["bash"]
-
