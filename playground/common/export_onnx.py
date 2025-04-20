@@ -147,25 +147,7 @@ def export_onnx(
 
         print("Weights transferred successfully.")
 
-    # pull the "network_params" out of the tuple
-    net_params = params[1]
-
-    # step 1: get the policy subtree (either attr or key)
-    if hasattr(net_params, "policy"):
-        policy_tree = net_params.policy
-    else:
-        policy_tree = net_params["policy"]
-
-    # step 2: get the actual weight dict (either attr or key)
-    if hasattr(policy_tree, "params"):
-        weight_dict = policy_tree.params
-    else:
-        weight_dict = policy_tree["params"]
-
-    # now transfer
-    transfer_weights(weight_dict, tf_policy_network)
-
-    # transfer_weights(params[1]["policy"]["params"], tf_policy_network)
+    transfer_weights(params[1].policy["params"], tf_policy_network)
 
     # Example inputs for the model
     test_input = [np.ones((1, obs_size), dtype=np.float32)]
@@ -190,4 +172,5 @@ def export_onnx(
     # model_proto, _ = tf2onnx.convert.from_keras(
     #     tf_policy_network, input_signature=spec, opset=11, output_path="ONNX.onnx"
     # )
+    
     return
